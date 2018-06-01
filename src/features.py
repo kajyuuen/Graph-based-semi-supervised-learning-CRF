@@ -41,6 +41,33 @@ def word2features(sent, i):
 
     return features
 
+def has_suffix(word):
+    suffixes = ["ed", "ing"]
+    for suffix in suffixes:
+        if word.endswith(suffix):
+            return True
+    return False
+
+def word2contextualfeature(sent, i):
+    # trigram, 5-nearest neighbor
+    words = [ word for (word, _, _) in sent[i-2:i+3]]
+
+    features = {
+        'trigram+context': ':'.join(words),
+        'trigram': ':'.join(words[1:4]),
+        'left_context': ':'.join(words[0:2]),
+        'right_context': ':'.join(words[3:5]),
+        'center_word': words[2],
+        'trigram-centerword': words[1] +':'+ words[3],
+        'left_word-right_context': words[1] + ':' + ':'.join(words[3:5]),
+        'left_context-right_word': ':'.join(words[0:2]) + ':' + words[3],
+        'suffix': has_suffix(words[2])
+    }
+
+    return features
+
+def sent2contextualfeature(sent):
+    return [word2contextualfeature(sent, i+2) for i in range(len(sent)-4)]
 
 def sent2features(sent):
     return [word2features(sent, i) for i in range(len(sent))]

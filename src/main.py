@@ -5,7 +5,7 @@ from sklearn_crfsuite import scorers
 from sklearn_crfsuite import metrics
 from sklearn.externals import joblib
 
-from features import sent2features, sent2labels
+from features import sent2features, sent2labels, sent2contextualfeature
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -14,7 +14,7 @@ if __name__ == "__main__":
     saving_group.add_argument('--load', action='store_true')
     model_group = parser.add_mutually_exclusive_group(required=True)
     model_group.add_argument('--crf', action='store_true', help='accuracy with supervised CRF')
-    model_group.add_argument('--graph-based-crf', action='store_true', help='accuracy with Graph based semi-supervised learning CRF')
+    model_group.add_argument('--graph', action='store_true', help='accuracy with Graph based semi-supervised learning CRF')
 
     train_sents = list(nltk.corpus.conll2002.iob_sents('esp.train'))
     test_sents = list(nltk.corpus.conll2002.iob_sents('esp.testb'))
@@ -42,8 +42,9 @@ if __name__ == "__main__":
         labels.remove('O')
         y_pred = crf.predict(X_test)
         score = metrics.flat_f1_score(y_test, y_pred, average='weighted', labels=labels)
-    elif(args.graph-based-crf):
+    elif(args.graph):
         # TODO:
+        contextualfeature = [sent2contextualfeature(s) for s in train_sents]
         score = 0
 
     print("Accuracy: {}".format(score))
