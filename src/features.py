@@ -69,6 +69,13 @@ def word2contextualfeature(sent, i):
 def sent2contextualfeature(sent):
     return [word2contextualfeature(sent, i+2) for i in range(len(sent)-4)]
 
+def sent2trigrams(sent):
+    trigrams = []
+    for i in range(len(sent)-4):
+        trigram = [word for (word, _, _) in (sent[i:i+3])]
+        trigrams.append(':'.join(trigram))
+    return trigrams
+
 def sent2features(sent):
     return [word2features(sent, i) for i in range(len(sent))]
 

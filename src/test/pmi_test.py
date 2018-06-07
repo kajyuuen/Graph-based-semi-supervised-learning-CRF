@@ -10,6 +10,7 @@ class PMITest(unittest.TestCase):
         self.pmi = PMI(self.x_list, self.features_list)
 
     def test_pmi(self):
+        # 出現しない要素のPMIは0
         self.assertEqual(self.pmi.pmi("c", "apple", "f1"), 0)
         # 出現頻度が高い方がPMIが高くなる
         self.assertTrue(self.pmi.pmi("b", "pen", "f2") > self.pmi.pmi("b", "book", "f1"))
@@ -17,7 +18,6 @@ class PMITest(unittest.TestCase):
     def test_pmi_vector(self):
         pmi_vec = self.pmi.pmi_vector('a', self.features_list[0])
         self.assertEqual(len(pmi_vec), 2)
-
 
 if __name__ == '__main__':
     unittest.main()

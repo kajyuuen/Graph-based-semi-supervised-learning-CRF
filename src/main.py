@@ -1,12 +1,14 @@
+import pickle
 import argparse
 import nltk
 import sklearn_crfsuite
 from sklearn_crfsuite import scorers
 from sklearn_crfsuite import metrics
 from sklearn.externals import joblib
+import numpy as np
 
-from features import sent2features, sent2labels, sent2contextualfeature
-
+from features import sent2features, sent2labels, sent2contextualfeature, sent2trigrams
+from pmi import PMI
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     saving_group = parser.add_mutually_exclusive_group()
@@ -43,8 +45,19 @@ if __name__ == "__main__":
         y_pred = crf.predict(X_test)
         score = metrics.flat_f1_score(y_test, y_pred, average='weighted', labels=labels)
     elif(args.graph):
-        # TODO:
-        contextualfeature = [sent2contextualfeature(s) for s in train_sents]
+        if(args.load):
+            with open('pmi_vectors.dat', 'rb') as fp:
+                pmi_vectors = pickle.load(fp)
+        else:
+            contextualfeatures_list = [sent2contextualfeature(s) for s in train_sents]
+            ngrams_list = [sent2trigrams(s) for s in train_sents]
+            all_ngrams = [ngram for ngrams in ngrams_list for ngram in ngrams]
+            all_features = [contextualfeature for contextualfeatures in contextualfeatures_list for contextualfeature in contextualfeatures]
+            pmi = PMI(all_ngrams, all_features)
+            pmi_vectors = [pmi.pmi_vector(ngram, features) for ngram, features in zip(all_ngrams, all_features)]
+        if(args.save):
+            with open('pmi_vectors.dat', 'wb') as fp:
+                pickle.dump(pmi_vectors, fp)
         score = 0
 
     print("Accuracy: {}".format(score))
