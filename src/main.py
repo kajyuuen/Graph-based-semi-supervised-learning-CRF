@@ -10,6 +10,7 @@ import numpy as np
 from features import sent2features, sent2labels, sent2contextualfeature, sent2trigrams, contextualfeatureslist2dict
 from pmi import PMI
 from graph import Graph
+from annotation_data_split import annotation_data_split
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     saving_group = parser.add_mutually_exclusive_group()
@@ -18,17 +19,16 @@ if __name__ == "__main__":
     model_group = parser.add_mutually_exclusive_group(required=True)
     model_group.add_argument('--crf', action='store_true', help='accuracy with supervised CRF')
     model_group.add_argument('--graph', action='store_true', help='accuracy with Graph based semi-supervised learning CRF')
+    args = parser.parse_args()
 
     train_sents = list(nltk.corpus.conll2002.iob_sents('esp.train'))
     test_sents = list(nltk.corpus.conll2002.iob_sents('esp.testb'))
 
-    X_train = [sent2features(s) for s in train_sents]
-    y_train = [sent2labels(s) for s in train_sents]
-    X_test = [sent2features(s) for s in test_sents]
-    y_test = [sent2labels(s) for s in test_sents]
-
-    args = parser.parse_args()
     if(args.crf):
+        X_train = [sent2features(s) for s in train_sents]
+        y_train = [sent2labels(s) for s in train_sents]
+        X_test = [sent2features(s) for s in test_sents]
+        y_test = [sent2labels(s) for s in test_sents]
         if(args.load):
             crf = joblib.load('crf.pkl')
         else:
@@ -50,6 +50,8 @@ if __name__ == "__main__":
             with open('graph.dat', 'rb') as fp:
                 graph = pickle.load(fp)
         else:
+            full_sents, partial_sents, missing_sents = annotation_data_split(train_sents)
+            train_sents = full_sents + partial_sents + missing_sents
             contextualfeatures_list = [sent2contextualfeature(s) for s in test_sents]
             ngrams_list = [sent2trigrams(s) for s in test_sents if len(sent2trigrams(s)) != 0 ]
             all_ngrams = [ngram for ngrams in ngrams_list for ngram in ngrams]
