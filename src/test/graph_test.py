@@ -20,12 +20,11 @@ class GraphTest(unittest.TestCase):
             [10, 1, 14, 1, 4, 100, 0, 1, 1]
         ]
 
-    def test_sim_matrix(self):
+    def test_number_of_edge(self):
         # k-nearest
         k = 3
-        graph = Graph(self.trigrams, self.labels, self.pmi_vectors)
-        first_sim_column = graph.sim_matrix[0]
-        self.assertEqual(len(first_sim_column[first_sim_column > 0]), k+1)
+        graph = Graph(self.trigrams, self.pmi_vectors)
+        self.assertEqual(graph.G.neighbors(0), [1, 2, 4])
 
 if __name__ == '__main__':
     unittest.main()
