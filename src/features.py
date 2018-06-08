@@ -84,3 +84,13 @@ def sent2labels(sent):
 
 def sent2tokens(sent):
     return [token for token, postag, label in sent]
+
+def contextualfeatureslist2dict(contextualfeatures_list):
+    features_dict = {}
+    for contextualfeatures in contextualfeatures_list:
+        for contextualfeature in contextualfeatures:
+            for feature_name, feature in contextualfeature.items():
+                if feature_name not in features_dict:
+                    features_dict[feature_name] = set()
+                features_dict[feature_name].add(feature)
+    return features_dict

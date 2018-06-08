@@ -7,7 +7,7 @@ from sklearn_crfsuite import metrics
 from sklearn.externals import joblib
 import numpy as np
 
-from features import sent2features, sent2labels, sent2contextualfeature, sent2trigrams
+from features import sent2features, sent2labels, sent2contextualfeature, sent2trigrams, contextualfeatureslist2dict
 from pmi import PMI
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -18,8 +18,8 @@ if __name__ == "__main__":
     model_group.add_argument('--crf', action='store_true', help='accuracy with supervised CRF')
     model_group.add_argument('--graph', action='store_true', help='accuracy with Graph based semi-supervised learning CRF')
 
-    train_sents = list(nltk.corpus.conll2002.iob_sents('esp.train'))
-    test_sents = list(nltk.corpus.conll2002.iob_sents('esp.testb'))
+    train_sents = list(nltk.corpus.conll2002.iob_sents('esp.train'))[0:10]
+    test_sents = list(nltk.corpus.conll2002.iob_sents('esp.testb'))[0:10]
 
     X_train = [sent2features(s) for s in train_sents]
     y_train = [sent2labels(s) for s in train_sents]
@@ -49,12 +49,13 @@ if __name__ == "__main__":
             with open('pmi_vectors.dat', 'rb') as fp:
                 pmi_vectors = pickle.load(fp)
         else:
-            contextualfeatures_list = [sent2contextualfeature(s) for s in train_sents]
-            ngrams_list = [sent2trigrams(s) for s in train_sents]
+            contextualfeatures_list = [sent2contextualfeature(s) for s in test_sents]
+            ngrams_list = [sent2trigrams(s) for s in test_sents if len(sent2trigrams(s)) != 0 ]
             all_ngrams = [ngram for ngrams in ngrams_list for ngram in ngrams]
             all_features = [contextualfeature for contextualfeatures in contextualfeatures_list for contextualfeature in contextualfeatures]
             pmi = PMI(all_ngrams, all_features)
-            pmi_vectors = [pmi.pmi_vector(ngram, features) for ngram, features in zip(all_ngrams, all_features)]
+            all_features_dict = contextualfeatureslist2dict(contextualfeatures_list)
+            pmi_vectors = np.array([pmi.pmi_vector(ngram, all_features_dict) for ngram in all_ngrams])
         if(args.save):
             with open('pmi_vectors.dat', 'wb') as fp:
                 pickle.dump(pmi_vectors, fp)

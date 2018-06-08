@@ -1,38 +1,41 @@
 from collections import Counter
 from math import log
 
+import numpy as np
 class PMI:
-    def __init__(self, x_list, features_list):
-        self.x_counter = Counter(x_list)
-        self.sum_x = len(x_list)
+    def __init__(self, labels, features_list):
+        self.label_counter = Counter(labels)
+        self.sum_label = len(labels)
 
-        xy_dict = {}
-        y_dict = {}
-        for x, features in zip(x_list, features_list):
+        feature_dict = {}
+        label_feature_dict = {}
+        for label, features in zip(labels, features_list):
             for feature_name, feature in features.items():
-                if feature_name not in y_dict:
-                     y_dict[feature_name] = []
-                if feature_name not in xy_dict:
-                     xy_dict[feature_name] = []
-                y_dict[feature_name].append(feature)
-                xy_dict[feature_name].append((x, feature))
+                if feature_name not in feature_dict:
+                    feature_dict[feature_name] = []
+                if feature_name not in label_feature_dict:
+                    label_feature_dict[feature_name] = []
+                feature_dict[feature_name].append(feature)
+                label_feature_dict[feature_name].append((label, feature))
 
-        self.y_counters = {}
-        self.xy_counters = {}
-        for feature_name, y in y_dict.items():
-            self.y_counters[feature_name] = Counter(y)
-        for feature_name, xy in xy_dict.items():
-            self.xy_counters[feature_name] = Counter(xy)
+        self.feature_counters = {}
+        self.label_feature_counters = {}
+        for feature_name, feature in feature_dict.items():
+            self.feature_counters[feature_name] = Counter(feature)
+        for feature_name, label_feature in label_feature_dict.items():
+            self.label_feature_counters[feature_name] = Counter(label_feature)
 
-    def pmi(self, x, y, feature_name):
-        cnt_x = self.x_counter[x] if self.x_counter[x] is not None else 0
-        cnt_y = self.y_counters[feature_name][y] if self.y_counters[feature_name][y] is not None else 0
-        cnt_xy = self.xy_counters[feature_name][(x, y)] if self.xy_counters[feature_name][(x, y)] is not None else 0
-        if cnt_x == 0 or cnt_y == 0:
+    def pmi(self, label, feature, feature_name):
+        cnt_label = self.label_counter[label] if self.label_counter[label] is not None else 0
+        cnt_feature = self.feature_counters[feature_name][feature] if self.feature_counters[feature_name][feature] is not None else 0
+        cnt_label_feature = self.label_feature_counters[feature_name][(label, feature)] if self.label_feature_counters[feature_name][(label, feature)] is not None else 0
+
+        if cnt_label == 0 or cnt_feature == 0 or cnt_label_feature == 0:
             score = 0
         else:
-            score = log(cnt_xy * self.sum_x/(cnt_x*cnt_y))
+            score = log((cnt_label_feature * self.sum_label)/(cnt_label*cnt_feature))
+
         return score
 
-    def pmi_vector(self, x, features):
-        return [self.pmi(x, feature, feature_name) for feature_name, feature in features.items()]
+    def pmi_vector(self, label, features_dict):
+        return np.array([self.pmi(label, feature, feature_name) for feature_name, feature_set in features_dict.items() for feature in feature_set])
