@@ -19,5 +19,3 @@ class Graph:
         # グラフのノード番号とtrigramsのindexは一致している
         self.G = nx.from_numpy_matrix(sim_matrix, create_using=nx.DiGraph())
         self.trigram = trigrams
-
-
