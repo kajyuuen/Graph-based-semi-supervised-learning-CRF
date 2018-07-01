@@ -1,3 +1,6 @@
+from collections import Counter, defaultdict
+import copy
+
 def word2features(sent, i):
     word = sent[i][0]
 
@@ -105,7 +108,9 @@ def sent2contextualfeature(sent):
 
 def sent2trigrams(sent):
     trigrams = []
-    for i in range(len(sent)-4):
+    sent.insert(0, ("<BOS>", '', ''))
+    sent.append(("<EOS>" , '', ''))
+    for i in range(len(sent)-2):
         trigram = [word for (word, _, _) in (sent[i:i+3])]
         trigrams.append(':'.join(trigram))
     return trigrams
@@ -121,6 +126,23 @@ def sent2tokens(sent):
 
 def sent2pos(sent):
     return [postag for token, postag, label in sent]
+
+def ngramlist_and_sents2cr(ngram_list, postags, marginal_prob_type):
+    cr = {}
+    ngram_type_counter = Counter()
+    for ngram, pos_tag in zip(ngram_list, postags):
+        ngram_type_counter[pos_tag] += 1
+        if ngram not in cr:
+            cr[ngram] = copy.deepcopy(marginal_prob_type)
+        cr[ngram][pos_tag] += 1
+    return cr, ngram_type_counter
+
+def count_r2r(count_r, ngram_type_counter):
+    r = {}
+    for ngram, pos_cnt in count_r.items():
+        all_cnt = sum([cnt for cnt in pos_cnt.values()])
+        r[ngram] = { pos: cnt/all_cnt for pos, cnt in pos_cnt.items()}
+    return r
 
 def contextualfeatureslist2dict(contextualfeatures_list):
     features_dict = {}
